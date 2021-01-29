@@ -3,6 +3,7 @@ import os
 import string
 import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from model import model, data_generator, engine
 
 
 class MyModel:
@@ -56,10 +57,13 @@ class MyModel:
     def load(cls, work_dir):
         # your code here
         # this particular model has nothing to load, but for demonstration purposes we will load a blank file
-        with open(os.path.join(work_dir, 'model.checkpoint')) as f:
-            dummy_save = f.read()
-        return MyModel()
-
+        try:
+            with open(os.path.join(work_dir, 'model.checkpoint')) as f:
+                dummy_save = f.read()
+            return MyModel()
+        except FileNotFoundError:
+            print("Trained model.checkpoint is not present")
+            exit()
 
 if __name__ == '__main__':
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
