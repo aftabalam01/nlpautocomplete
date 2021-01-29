@@ -8,6 +8,9 @@ mkdir -p submit
 # submit team.txt
 printf "Omkar Agashe,omagashe\nAftab Alam,aftaba\nAbduselam Shaltu,ashaltu" > submit/team.txt
 
+# submit requirements.txt
+cp -r requirements.txt submit/requirements.txt
+
 # train model
 python src/main.py train --work_dir work
 
@@ -18,7 +21,10 @@ python src/main.py test --work_dir work --test_data example/input.txt --test_out
 cp Dockerfile submit/Dockerfile
 
 # submit source code
-cp -r src submit/src
+# do not copy python compiled cache files
+cp -r ./src ./submit/src
+rm -rf ./submit/src/data/__pycache__
+rm -rf ./submit/src/model/__pycache__
 
 # submit checkpoints
 cp -r work submit/work
