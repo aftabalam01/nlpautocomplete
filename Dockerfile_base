@@ -1,8 +1,7 @@
 FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
 RUN apt-get update -y\
     && apt-get install make -y\
-    && apt-get install build-essential -y \
-    && mkdir /job
+    && apt-get install build-essential -y 
 
 COPY requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
