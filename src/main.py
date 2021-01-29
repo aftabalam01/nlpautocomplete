@@ -3,6 +3,7 @@ import os
 import string
 import random
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from model import model, data_generator, engine
 
 
 class MyModel:
@@ -20,11 +21,15 @@ class MyModel:
     def load_test_data(cls, fname):
         # your code here
         data = []
-        with open(fname) as f:
-            for line in f:
-                inp = line[:-1]  # the last character is a newline
-                data.append(inp)
-        return data
+        try:
+            with open(fname) as f:
+                for line in f:
+                    inp = line[:-1]  # the last character is a newline
+                    data.append(inp)
+            return data
+        except FileNotFoundError:
+            print(f"Test Input file {fname} is not present. Using default input")
+            return ['Happ','Happy Ne','Happy New Yea','That’s one small ste','That’s one sm','That’','Th']
 
     @classmethod
     def write_pred(cls, preds, fname):
@@ -56,10 +61,13 @@ class MyModel:
     def load(cls, work_dir):
         # your code here
         # this particular model has nothing to load, but for demonstration purposes we will load a blank file
-        with open(os.path.join(work_dir, 'model.checkpoint')) as f:
-            dummy_save = f.read()
-        return MyModel()
-
+        try:
+            with open(os.path.join(work_dir, 'model.checkpoint')) as f:
+                dummy_save = f.read()
+            return MyModel()
+        except FileNotFoundError:
+            print("Trained model.checkpoint is not present")
+            #exit()
 
 if __name__ == '__main__':
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)

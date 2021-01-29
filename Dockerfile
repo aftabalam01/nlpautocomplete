@@ -1,7 +1,7 @@
-FROM pytorch/pytorch:1.6.0-cuda10.1-cudnn7-runtime
+FROM aftabalam01/pytorch_allennlp:2.0
 RUN mkdir /job
+COPY requirements.txt ./requirements.txt
+RUN pip install -r ./requirements.txt
 WORKDIR /job
-VOLUME ["/job/data", "/job/src", "/job/work", "/job/output"]
 
-# You should install any dependencies you need here.
-# RUN pip install tqdm
+VOLUME ["/job/data", "/job/src", "/job/work", "/job/output"]
