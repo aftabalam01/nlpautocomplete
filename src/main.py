@@ -21,11 +21,15 @@ class MyModel:
     def load_test_data(cls, fname):
         # your code here
         data = []
-        with open(fname) as f:
-            for line in f:
-                inp = line[:-1]  # the last character is a newline
-                data.append(inp)
-        return data
+        try:
+            with open(fname) as f:
+                for line in f:
+                    inp = line[:-1]  # the last character is a newline
+                    data.append(inp)
+            return data
+        except FileNotFoundError:
+            print(f"Test Input file {fname} is not present. Using default input")
+            return ['Happ','Happy Ne','Happy New Yea','That’s one small ste','That’s one sm','That’','Th']
 
     @classmethod
     def write_pred(cls, preds, fname):
@@ -63,7 +67,7 @@ class MyModel:
             return MyModel()
         except FileNotFoundError:
             print("Trained model.checkpoint is not present")
-            exit()
+            #exit()
 
 if __name__ == '__main__':
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
