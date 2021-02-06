@@ -8,7 +8,7 @@ import torch.optim as optim
 import numpy as np
 import pickle
 import re
-import torch_utils as utils
+import model.torch_utils as utils
 from pathlib import Path
 import string
 
@@ -92,7 +92,7 @@ def prepare_data(data_file, vocab=None,data_type='train',is_sample=False):
 
     pickle.dump({'tokens': line_tokens}, open(f'{data_file}.pkl', 'wb'))
 
-if __name__=='__main__':
+def tokenize_prepare_data():
     print("Creating vocab using train data")
     vocab = Vocabulary(f'{DATA_PATH}/train')
     print(len(vocab) , vocab.get()['voc2ind'] )
@@ -102,3 +102,7 @@ if __name__=='__main__':
     prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/test_freq')
     print("Coverting validation sentences to tokens")
     prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/valid_freq')
+
+
+if __name__=='__main__':
+    tokenize_prepare_data()

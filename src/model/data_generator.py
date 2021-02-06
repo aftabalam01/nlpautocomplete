@@ -4,7 +4,7 @@ import pickle
 import numpy as np
 import random
 from pathlib import Path
-from tokenize_data import Vocabulary
+from model.tokenize_data import Vocabulary
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')
 
@@ -36,7 +36,7 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
         inputs_list=[]
         targets_list = []
         for line in data:
-            line = [0]*(self.sequence_length-1) + line # 0 padding
+            line = [0]+ line # 0 padding
             # create ngram tokens and add it to 
             ngrams = ngram(self.sequence_length,line)
             inputs_list = inputs_list + ngrams[:-1]

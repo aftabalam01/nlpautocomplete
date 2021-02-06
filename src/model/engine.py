@@ -6,9 +6,12 @@ import torch.optim as optim
 import numpy as np
 from pathlib import Path
 import multiprocessing
-from data_generator import AutoCompleteDataset
-from model import AutoCompleteNet
-import torch_utils
+import random
+import pickle
+from model import torch_utils
+from model.data_generator import AutoCompleteDataset
+from model.model import AutoCompleteNet
+
 
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')
@@ -25,22 +28,29 @@ def perplexity_loss(loss):
     loss = torch.tensor(loss)
   return torch.exp(loss).tolist()
 
-def predict_next_characters(automodel, device, seed_words, vocab, num_chars=3):
+def predict_next_characters(automodel, device, seed_words, vocab=None, num_chars=3):
     """
     using given model it predicts best n chars
     """
+    if not vocab:
+        with open(f'{DATA_PATH}/vocabulary.pkl','rb') as f:
+            vocab = pickle.load(f)
     automodel.eval()
     with torch.no_grad():
         arr = torch.LongTensor([vocab['voc2ind'].get(char,1) for char in seed_words])
 
                 # Computes the initial hidden state from the prompt (seed words).
         hidden = None
-        data = arr.to(device)
-        output, hidden = automodel.inference(data, hidden)
+        output=None
+        for ind in arr:
+            data = ind.to(device)
+            output, hidden = automodel.inference(data, hidden)
         # get top n probs indexes
-        #torch.argsort(input, dim=-1, descending=False)
-        ind_arr = torch.argsort(output,descending=True)[:num_chars]
-        char_arr = [vocab['ind2voc'].get(ind,'_UNK_') for ind in ind_arr]
+
+        #print(output)
+        # get top 3 values's indices
+        ind_arr = torch.topk(output,num_chars)[1].tolist()
+        char_arr = [vocab['ind2voc'].get(ind,'_UNK_') for ind in ind_arr[0]]
     return char_arr
 
 
@@ -103,24 +113,24 @@ def eval(automodel, device, eval_loader,log_interval):
         100. * correct / (len(eval_loader.dataset) * eval_loader.dataset.sequence_length),pp_H))
     return eval_loss, eval_accuracy, pp_H
 
-def train_eval():
-    SEQUENCE_LENGTH = 10
-    BATCH_SIZE = 4
+def train_eval(work_dir='./logs'):
+    SEQUENCE_LENGTH = 100
+    BATCH_SIZE = 32
     FEATURE_SIZE = 512
-    EVAL_BATCH_SIZE = 4
-    EPOCHS = 2
-    LEARNING_RATE = 0.01
+    EVAL_BATCH_SIZE = 32
+    EPOCHS = 100
+    LEARNING_RATE = 0.00005
     WEIGHT_DECAY = 0.00005
     USE_CUDA = True
     PRINT_INTERVAL = 10000
-    LOG_PATH = '../logs/basemodel/log.pkl'
-    checkpoints = '../logs/basecheckpoint'
+    LOG_PATH = f'{work_dir}/log.pkl'
+    checkpoints = f'{work_dir}/checkpoint'
     
     print('Creating Training data set')
-    data_train = AutoCompleteDataset(data_file=f'{DATA_PATH}/train_sample.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=BATCH_SIZE)
+    data_train = AutoCompleteDataset(data_file=f'{DATA_PATH}/train.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=BATCH_SIZE)
     print(f"data_train vocab size {data_train.vocab_size()}")
     print('Creating eval data set')
-    data_eval = AutoCompleteDataset(data_file=f'{DATA_PATH}/valid_freq_sample.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=EVAL_BATCH_SIZE)
+    data_eval = AutoCompleteDataset(data_file=f'{DATA_PATH}/valid_freq.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=EVAL_BATCH_SIZE)
 
     vocab = data_train.vocab
 
@@ -154,7 +164,7 @@ def train_eval():
 
     try:
         for epoch in range(start_epoch, EPOCHS + 1):
-            if epoch % 10 == 0 :
+            if epoch % 5 == 0 :
                 LEARNING_RATE = LEARNING_RATE *.5
             optimizer = optim.Adam(automodel.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
             train_loss, train_perplexity = train_one_epoch(automodel, device, optimizer, train_loader, LEARNING_RATE, epoch, PRINT_INTERVAL)
@@ -165,12 +175,13 @@ def train_eval():
             eval_perplexities.append((epoch, test_perplexity))
             train_perplexities.append((epoch, train_perplexity))
             torch_utils.write_log(LOG_PATH, (train_losses, eval_losses, eval_accuracies, eval_perplexities, train_perplexities))
-            automodel.save_best_model(test_accuracy, checkpoints + '/%03d.pt' % epoch)
+            automodel.save_best_model(test_accuracy, checkpoints + '/%03d.pt.checkpoint' % epoch)
             seed_words = 'Do you know '
     
             for ii in range(10):
                 next_chars = predict_next_characters(automodel, device, seed_words, vocab, num_chars=3)
-                print(f'generated sample \t\t{next_chars}')
+                seed_words = seed_words + random.choice(next_chars)
+                print(f'generated sample \t{next_chars} \t {seed_words}')
             print('')
 
     except KeyboardInterrupt as ke:
