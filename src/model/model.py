@@ -23,6 +23,7 @@ class AutoCompleteNet(nn.Module):
         self.best_accuracy = -1
     
     def forward(self, x, hidden_state=None):
+        print(x)
         batch_size = x.shape[0]
         sequence_length = x.shape[1]
         # TODO finish defining the forward pass.
