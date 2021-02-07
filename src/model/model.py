@@ -14,7 +14,7 @@ class AutoCompleteNet(nn.Module):
         self.vocab_size = vocab_size
         self.feature_size = feature_size
         self.encoder = nn.Embedding(self.vocab_size, self.feature_size)
-        self.gru = nn.GRU(self.feature_size, self.feature_size, batch_first=True,num_layers=5, dropout=.20,bidirectional=False)
+        self.gru = nn.GRU(self.feature_size, self.feature_size, batch_first=True,num_layers=5, dropout=0,bidirectional=False)
         self.decoder = nn.Linear(self.feature_size, self.vocab_size)
         # This shares the encoder and decoder weights as described in lecture.
         self.decoder.weight = self.encoder.weight
@@ -23,7 +23,6 @@ class AutoCompleteNet(nn.Module):
         self.best_accuracy = -1
     
     def forward(self, x, hidden_state=None):
-        print(x)
         batch_size = x.shape[0]
         sequence_length = x.shape[1]
         # TODO finish defining the forward pass.

@@ -39,15 +39,16 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
         inputs_list=[]
         targets_list = []
         i=0
+        print(f"Starting to build {self.sequence_length} character lenghts seq")
         for line in data:
             i +=1
             if i%10000==0:
               print(f'{i} sentences are processes')
             line = [0]+ line # 0 padding
             # create ngram tokens and add it to 
-            ngram_tokens = ngrams(line,n=self.sequence_length)
-            inputs_list = inputs_list + ngrams[:-1]
-            targets_list = targets_list + ngrams[1:]
+            ngram_tokens = list(ngrams(line,n=self.sequence_length))
+            inputs_list = inputs_list + ngram_tokens[:-1]
+            targets_list = targets_list + ngram_tokens[1:]
         len_tokens = int((len(inputs_list)//self.batch_size) * self.batch_size)
         self.datas = inputs_list[0:len_tokens]
         self.labels = targets_list[0:len_tokens]

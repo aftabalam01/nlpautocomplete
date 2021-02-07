@@ -115,10 +115,10 @@ def eval(automodel, device, eval_loader,log_interval):
 
 def train_eval(work_dir='./logs'):
     SEQUENCE_LENGTH = 100
-    BATCH_SIZE = 32
-    FEATURE_SIZE = 512
-    EVAL_BATCH_SIZE = 32
-    EPOCHS = 100
+    BATCH_SIZE = 512
+    FEATURE_SIZE = 256
+    EVAL_BATCH_SIZE = 256
+    EPOCHS = 20
     LEARNING_RATE = 0.00005
     WEIGHT_DECAY = 0.00005
     USE_CUDA = True
