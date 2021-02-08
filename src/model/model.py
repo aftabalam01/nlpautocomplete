@@ -64,8 +64,8 @@ class AutoCompleteNet(nn.Module):
             self.save_model(file_path, num_to_keep)
             self.best_accuracy = accuracy
 
-    def load_model(self, file_path):
-        torch_utils.restore(self, file_path)
+    def load_model(self, file_path,device='cpu'):
+        torch_utils.restore(self, file_path,device)
 
     def load_last_model(self, dir_path):
         return torch_utils.restore_latest(self, dir_path)

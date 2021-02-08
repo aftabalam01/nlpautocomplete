@@ -9,7 +9,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from model import model, data_generator, engine, tokenize_data
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-FEATURE_SIZE=512
+FEATURE_SIZE=256
 DATA_PATH = os.path.join(Path(__file__).parent, '.', 'data')
 class MyModel_Runner:
     """
@@ -51,7 +51,7 @@ class MyModel_Runner:
         preds = []
         for inp in data:
             # this model just predicts a random character each time
-            preds.append(engine.predict_next_characters(model, device, inp, vocab=None, num_chars=3))
+            preds.append(''.join(engine.predict_next_characters(model, device, inp, vocab=None, num_chars=3)))
         return preds
 
     def save(self, work_dir):
@@ -67,8 +67,9 @@ class MyModel_Runner:
         try:
             with open(f'{DATA_PATH}/vocabulary.pkl','rb') as f:
                 cls.vocab = pickle.load(f)
-            automodel = model.AutoCompleteNet(len(cls.vocab), FEATURE_SIZE)
-            automodel.load_model(f'{work_dir}/model.checkpoint')
+            print(cls.vocab)
+            automodel = model.AutoCompleteNet(len(cls.vocab['voc2ind']), FEATURE_SIZE)
+            automodel.load_model(f'{work_dir}/model.checkpoint',device)
             automodel.to(device)
     
             return automodel

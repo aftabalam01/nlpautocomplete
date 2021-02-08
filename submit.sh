@@ -12,7 +12,7 @@ printf "Omkar Agashe,omagashe\nAftab Alam,aftaba\nAbduselam Shaltu,ashaltu" > su
 cp -r requirements.txt submit/requirements.txt
 
 # train model
-python src/main.py train --work_dir work
+#python src/main.py train --work_dir work
 
 # make predictions on example data submit it in pred.txt
 python src/main.py test --work_dir work --test_data example/input.txt --test_output submit/pred.txt
