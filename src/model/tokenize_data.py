@@ -8,7 +8,7 @@ import torch.optim as optim
 import numpy as np
 import pickle
 import re
-import model.torch_utils as utils
+import torch_utils as utils
 from pathlib import Path
 import string
 
@@ -19,7 +19,7 @@ class Vocabulary(object):
         self.UNK = '__unk__'
         self.START = '__<s>__'
         self.PAD = '__pad__'
-        self.STOP = '__<e>__'
+        self.STOP = '\n'
         self.train_file = train_file
         if self.train_file:
             self._build_vocab()
@@ -27,7 +27,9 @@ class Vocabulary(object):
     def _build_vocab(self):
         with open(self.train_file, 'r') as f:
             data = f.read()
-        char_list = [self.PAD]+[self.UNK]+ sorted(list(set(data))) + [self.STOP]
+        data = nlp_text_preprocessing(data) # removing newlines as I am going newlines as stop symbol
+        char_list = [self.PAD]+[self.UNK]+ list(set(data)) + [self.STOP]
+        #char_list = list(set(char_list))
         print(len(char_list), char_list)
         voc2ind = {}
         ind2voc = {}
