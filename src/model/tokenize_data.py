@@ -8,7 +8,7 @@ import torch.optim as optim
 import numpy as np
 import pickle
 import re
-import torch_utils as utils
+from model import torch_utils as utils
 from pathlib import Path
 import string
 

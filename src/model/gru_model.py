@@ -6,7 +6,7 @@ import torch.optim as optim
 import sys
 import pickle
 import re
-import torch_utils
+from model import torch_utils
 # model definition
 class AutoCompleteNet(nn.Module):
     def __init__(self, vocab_size, feature_size):

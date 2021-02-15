@@ -10,8 +10,7 @@ import random
 import pickle
 from model import torch_utils
 from model.data_generator import AutoCompleteDataset
-from model.model import AutoCompleteNet
-
+from model.gru_model import AutoCompleteNet
 
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')

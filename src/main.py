@@ -6,7 +6,7 @@ import torch
 import pickle
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from model import model, data_generator, engine, tokenize_data
+from model import gru_model, data_generator, engine, tokenize_data
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FEATURE_SIZE=256
@@ -68,7 +68,7 @@ class MyModel_Runner:
             with open(f'{DATA_PATH}/vocabulary.pkl','rb') as f:
                 cls.vocab = pickle.load(f)
             print(cls.vocab)
-            automodel = model.AutoCompleteNet(len(cls.vocab['voc2ind']), FEATURE_SIZE)
+            automodel = gru_model.AutoCompleteNet(len(cls.vocab['voc2ind']), FEATURE_SIZE)
             automodel.load_model(f'{work_dir}/model.checkpoint',device)
             automodel.to(device)
     
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         print(model)
         print('Loading test data from {}'.format(args.test_data))
         test_data = runner.load_test_data(args.test_data)
-        print(test_data)
+        #print(test_data)
         print('Making predictions')
         pred = runner.run_pred(model, test_data)
         print('Writing predictions to {}'.format(args.test_output))
