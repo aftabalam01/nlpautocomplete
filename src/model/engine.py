@@ -112,12 +112,53 @@ def eval(automodel, device, eval_loader,log_interval):
         100. * correct / (len(eval_loader.dataset) * eval_loader.dataset.sequence_length),pp_H))
     return eval_loss, eval_accuracy, pp_H
 
+def test(automodel,device):
+    automodel.eval()
+    eval_loss = 0
+    correct = 0
+    num_workers = multiprocessing.cpu_count()
+    print('num workers:', num_workers)
+
+    kwargs = {'num_workers': num_workers,
+            'pin_memory': True} if torch.cuda.is_available() else {}
+    data_eval = AutoCompleteDataset(data_file=f'{DATA_PATH}/masterdata/master_test.txt.pkl',sequence_length=100,batch_size=128)
+    eval_loader = torch.utils.data.DataLoader(data_eval, batch_size=128,
+                                            shuffle=False, **kwargs)
+    iter = enumerate(eval_loader)
+    with torch.no_grad():
+        hidden = None
+        for batch_idx,(data , label) in enumerate(eval_loader):
+            data, label = data.to(device), label.to(device)
+            try:
+                output, hidden = automodel(data, hidden)
+                eval_loss += automodel.loss(output, label, reduction='mean').item()
+                pred = output.max(-1)[1]
+                correct_mask = pred.eq(label.view_as(pred))
+                num_correct = correct_mask.sum().item()
+                correct += num_correct
+                # Comment this out to avoid printing test results
+                if batch_idx % 5000 == 0:
+                    print(f'Input\t{eval_loader.dataset.array_to_sentence(data[0])}\n \
+                    GT\t{eval_loader.dataset.array_to_sentence(label[0])}\n \
+                    pred\t{eval_loader.dataset.array_to_sentence(pred[0])}\n\n')
+            except:
+                print(data, label)
+                raise
+
+    eval_loss /= len(eval_loader)
+    eval_accuracy = 100. * correct / (len(eval_loader.dataset) * eval_loader.dataset.sequence_length)
+    pp_H = perplexity_loss(eval_loss)
+    print('\nEval set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%), perplexity {}\n'.format(
+        eval_loss, correct, len(eval_loader.dataset) * eval_loader.dataset.sequence_length,
+        100. * correct / (len(eval_loader.dataset) * eval_loader.dataset.sequence_length),pp_H))
+    return eval_loss, eval_accuracy, pp_H
+
 def train_eval(work_dir='./logs'):
     SEQUENCE_LENGTH = 100
     BATCH_SIZE = 512
     FEATURE_SIZE = 256
     EVAL_BATCH_SIZE = 256
-    EPOCHS = 50
+    EPOCHS = 100
     LEARNING_RATE = 0.00001
     WEIGHT_DECAY = 0.000005
     USE_CUDA = True
@@ -126,10 +167,10 @@ def train_eval(work_dir='./logs'):
     checkpoints = f'{work_dir}/checkpoint'
     
     print('Creating Training data set')
-    data_train = AutoCompleteDataset(data_file=f'{DATA_PATH}/train.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=BATCH_SIZE)
+    data_train = AutoCompleteDataset(data_file=f'{DATA_PATH}/masterdata/master_train.txt.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=BATCH_SIZE)
     print(f"data_train vocab size {data_train.vocab_size()}")
     print('Creating eval data set')
-    data_eval = AutoCompleteDataset(data_file=f'{DATA_PATH}/valid_freq.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=EVAL_BATCH_SIZE)
+    data_eval = AutoCompleteDataset(data_file=f'{DATA_PATH}/masterdata/master_dev.txt.pkl',sequence_length=SEQUENCE_LENGTH,batch_size=EVAL_BATCH_SIZE)
 
     vocab = data_train.vocab
 

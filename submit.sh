@@ -23,7 +23,7 @@ cp Dockerfile submit/Dockerfile
 # submit source code
 # do not copy python compiled cache files
 cp -r ./src ./submit/src
-rm -rf ./submit/src/data/__pycache__
+rm -rf ./submit/src/data/
 rm -rf ./submit/src/model/__pycache__
 
 # submit checkpoints

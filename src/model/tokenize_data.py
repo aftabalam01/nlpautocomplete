@@ -25,10 +25,11 @@ class Vocabulary(object):
             self._build_vocab()
     
     def _build_vocab(self):
+        print(self.train_file)
         with open(self.train_file, 'r') as f:
             data = f.read()
         data = nlp_text_preprocessing(data) # removing newlines as I am going newlines as stop symbol
-        char_list = [self.PAD]+[self.UNK]+ list(set(data)) + [self.STOP]
+        char_list = [self.PAD]+[self.UNK]+ sorted(list(set(data))) + [self.STOP]
         #char_list = list(set(char_list))
         print(len(char_list), char_list)
         voc2ind = {}
@@ -70,7 +71,6 @@ def nlp_text_preprocessing(text):
   text = re.sub('\s+', ' ', text)
   text = re.sub('\n+', '\n', text)
   text = re.sub('\t+', ' ', text)
-  text = re.sub(f'[^{re.escape(string.printable)}]', '', text)
   return text
 
 def prepare_data(data_file, vocab=None,data_type='train',is_sample=False):
@@ -96,14 +96,14 @@ def prepare_data(data_file, vocab=None,data_type='train',is_sample=False):
 
 def tokenize_prepare_data():
     print("Creating vocab using train data")
-    vocab = Vocabulary(f'{DATA_PATH}/train')
+    vocab = Vocabulary(f'{DATA_PATH}/masterdata/master_train.txt')
     print(len(vocab) , vocab.get()['voc2ind'] )
     print("Coverting train sentences to tokens")
-    prepare_data(data_file=f'{DATA_PATH}/train')
+    prepare_data(data_file=f'{DATA_PATH}/masterdata/master_train.txt')
     print("Coverting test sentences to tokens")
-    prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/test_freq')
+    prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/masterdata/master_test.txt')
     print("Coverting validation sentences to tokens")
-    prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/valid_freq')
+    prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/masterdata/master_dev.txt')
 
 
 if __name__=='__main__':

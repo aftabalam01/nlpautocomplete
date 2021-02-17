@@ -7,6 +7,7 @@ import pickle
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from model import gru_model, data_generator, engine, tokenize_data
+from datetime import datetime
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 FEATURE_SIZE=256
@@ -45,13 +46,30 @@ class MyModel_Runner:
     def run_train(self, data, work_dir):
         # your code here
         automodel, vocab, device = engine.train_eval(work_dir)
+    
+    def run_eval(self,work_dir):
+        if not self.vocab:
+            with open(f'{work_dir}/vocabulary.pkl','rb') as f:
+                self.vocab = pickle.load(f)
+        print(self.vocab)
+        automodel = gru_model.AutoCompleteNet(len(self.vocab['voc2ind']), FEATURE_SIZE)
+        automodel.load_model(f'{work_dir}/model.checkpoint',device)
+        automodel.to(device)
+        engine.test(automodel,device)
 
-    def run_pred(self, model, data):
+    def run_pred(self, model, data,work_dir):
         # your code here
         preds = []
+        count=0
+        if not self.vocab:
+            with open(f'{work_dir}/vocabulary.pkl','rb') as f:
+                    self.vocab = pickle.load(f)
         for inp in data:
+            if count % 1000 == 0:
+                print(f'{count} prediction completed')
+            count += 1
             # this model just predicts a random character each time
-            preds.append(''.join(engine.predict_next_characters(model, device, inp, vocab=None, num_chars=3)))
+            preds.append(''.join(engine.predict_next_characters(model, device, inp[-100:], vocab=self.vocab, num_chars=3)))
         return preds
 
     def save(self, work_dir):
@@ -65,9 +83,9 @@ class MyModel_Runner:
         # your code here
         # this particular model has nothing to load, but for demonstration purposes we will load a blank file
         try:
-            with open(f'{DATA_PATH}/vocabulary.pkl','rb') as f:
+            with open(f'{work_dir}/vocabulary.pkl','rb') as f:
                 cls.vocab = pickle.load(f)
-            print(cls.vocab)
+            print(f"Size of vocab is {len(cls.vocab['voc2ind'])}")
             automodel = gru_model.AutoCompleteNet(len(cls.vocab['voc2ind']), FEATURE_SIZE)
             automodel.load_model(f'{work_dir}/model.checkpoint',device)
             automodel.to(device)
@@ -79,38 +97,45 @@ class MyModel_Runner:
 
 if __name__ == '__main__':
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('mode', choices=('train', 'test'), help='what to run')
+    parser.add_argument('mode', choices=('train', 'test','tokenize'), help='what to run')
     parser.add_argument('--work_dir', help='where to save', default='work')
     parser.add_argument('--test_data', help='path to test data', default='example/input.txt')
     parser.add_argument('--test_output', help='path to write test predictions', default='pred.txt')
     args = parser.parse_args()
 
     random.seed(0)
-
+    if args.mode == 'tokenize':
+        print('Instatiating model')
+        runner = MyModel_Runner()
+        print('Loading training data')
+        train_data = runner.load_training_data()
     if args.mode == 'train':
         if not os.path.isdir(args.work_dir):
             print('Making working directory {}'.format(args.work_dir))
             os.makedirs(args.work_dir)
         print('Instatiating model')
-        runner = MyModel_Runner()
-        print('Loading training data')
-        train_data = runner.load_training_data()
-        print('Training')
-        runner.run_train(train_data, args.work_dir)
-        print('Saving model')
-        runner.save(args.work_dir)
+        # runner = MyModel_Runner()
+        # print('Loading training data')
+        # train_data = runner.load_training_data()
+        # print('Training')
+        # runner.run_train(train_data, args.work_dir)
+        # print('Saving model')
+        # runner.save(args.work_dir)
     elif args.mode == 'test':
         runner = MyModel_Runner()
-        print('Loading model')
+        print(f'{datetime.now()}\t Loading model')
         model = runner.load(args.work_dir)
+        print(f'{datetime.now()}\t Model Loaded')
         print(model)
+        #runner.run_eval(args.work_dir)
         print('Loading test data from {}'.format(args.test_data))
         test_data = runner.load_test_data(args.test_data)
-        #print(test_data)
-        print('Making predictions')
-        pred = runner.run_pred(model, test_data)
-        print('Writing predictions to {}'.format(args.test_output))
-        assert len(pred) == len(test_data), 'Expected {} predictions but got {}'.format(len(test_data), len(pred))
+        print(f'Number of test data: {len(test_data)}')
+        print(f'{datetime.now()}\tMaking predictions')
+        pred = runner.run_pred(model, test_data,args.work_dir)
+        print(f'{datetime.now()}\tWriting predictions to {args.test_output}')
         runner.write_pred(pred, args.test_output)
+        assert len(pred) == len(test_data), 'Expected {} predictions but got {}'.format(len(test_data), len(pred))
     else:
+
         raise NotImplementedError('Unknown mode {}'.format(args.mode))
