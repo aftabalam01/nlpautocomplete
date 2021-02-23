@@ -1,8 +1,15 @@
 FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
 RUN apt-get update -y\
     && apt-get install make -y\
-    && apt-get install build-essential -y 
+    && apt-get install build-essential -y\
+    && apt-get --purge remove -y nvidia* -y \
+    && apt-get install curl -y 
+
+RUN curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add -
+RUN curl -s -L https://nvidia.github.io/nvidia-docker/ubuntu20.04/nvidia-docker.list > /etc/apt/sources.list.d/nvidia-docker.list
+
+RUN apt update \
+    && apt -y install nvidia-container-toolkit
 
 COPY requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
-
