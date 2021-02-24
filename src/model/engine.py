@@ -38,15 +38,13 @@ def predict_next_characters(automodel, device, seed_words, vocab=None, num_chars
     with torch.no_grad():
         arr = torch.LongTensor([vocab['voc2ind'].get(char,1) for char in seed_words])
 
-                # Computes the initial hidden state from the prompt (seed words).
+        # Computes the initial hidden state from the prompt (seed words).
         hidden = None
         output=None
         for ind in arr:
             data = ind.to(device)
             output, hidden = automodel.inference(data, hidden)
         # get top n probs indexes
-
-        #print(output)
         # get top 3 values's indices
         ind_arr = torch.topk(output,num_chars)[1].tolist()
         char_arr = [vocab['ind2voc'].get(ind,'_UNK_') for ind in ind_arr[0]]

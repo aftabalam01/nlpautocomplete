@@ -96,7 +96,7 @@ def prepare_data(data_file, vocab=None,data_type='train',is_sample=False):
 
 def tokenize_prepare_data():
     print("Creating vocab using train data")
-    vocab = Vocabulary(f'{DATA_PATH}/masterdata/master_train.txt')
+    vocab = Vocabulary()
     print(len(vocab) , vocab.get()['voc2ind'] )
     print("Coverting train sentences to tokens")
     prepare_data(data_file=f'{DATA_PATH}/masterdata/master_train.txt')
