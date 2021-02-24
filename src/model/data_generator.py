@@ -5,24 +5,24 @@ import numpy as np
 import random
 from nltk.util import pad_sequence
 #from nltk.util import bigrams
-from nltk.util import ngrams
+#from nltk.util import ngrams
 from pathlib import Path
 from model.tokenize_data import Vocabulary
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')
 
-# def ngram(n, tokens):
-#     """
-#     input list of tokens
-#     n - ngram 
+def ngram(n, tokens):
+    """
+    input list of tokens
+    n - ngram 
 
-#     output: n-gram tokens
-#     """
-#     N = len(tokens)
-#     ngrams = []
-#     for t in range(N-n+1):
-#         ngrams = [*ngrams,tokens[t:t+n]]
-#     return ngrams
+    output: n-gram tokens
+    """
+    N = len(tokens)
+    ngrams = []
+    for t in range(N-n+1):
+        ngrams = [*ngrams,tokens[t:t+n]]
+    return ngrams
 
 class AutoCompleteDataset(torch.utils.data.Dataset):
     def __init__(self, data_file, sequence_length, batch_size):
@@ -44,10 +44,12 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
             i +=1
             if i%10000==0:
               print(f'{i} sentences are processes')
-            pad_len = self.sequence_length - len(line) % self.sequence_length
-            line = [0]*pad_len+ line # 0 padding
+            # pad_len = self.sequence_length - len(line) % self.sequence_length
+            # line = [0]*pad_len+ line # 0 padding
             # create ngram tokens and add it to 
-            ngram_tokens = list(ngrams(line,n=self.sequence_length))
+            #print(line,self.sequence_length)
+            ngram_tokens = ngram(n=self.sequence_length,tokens=line)
+            #print(ngram_tokens)
             inputs_list.extend(ngram_tokens[:-1])
             targets_list.extend(ngram_tokens[1:])
         len_tokens = int((len(inputs_list)//self.batch_size) * self.batch_size)

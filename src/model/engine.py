@@ -204,8 +204,8 @@ def train_eval(work_dir='./logs'):
 
     try:
         for epoch in range(start_epoch, EPOCHS + 1):
-            if epoch % 5 == 0 :
-                LEARNING_RATE = LEARNING_RATE *.5
+            if epoch % 10 == 0 :
+                LEARNING_RATE = LEARNING_RATE *.8
             optimizer = optim.Adam(automodel.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
             train_loss, train_perplexity = train_one_epoch(automodel, device, optimizer, train_loader, LEARNING_RATE, epoch, PRINT_INTERVAL)
             test_loss, test_accuracy, test_perplexity = eval(automodel, device, eval_loader,PRINT_INTERVAL)
@@ -246,4 +246,3 @@ def train_eval(work_dir='./logs'):
 
 if __name__=='__main__':
     automodel, vocab, device = train_eval()
-
