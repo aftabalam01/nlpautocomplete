@@ -59,7 +59,7 @@ class AutoCompleteNet(nn.Module):
         torch_utils.save(self, file_path, num_to_keep)
 
     # Saves the best model so far
-    def save_best_model(self, accuracy, file_path, num_to_keep=1):
+    def save_best_model(self, accuracy, file_path, num_to_keep=5):
         if accuracy > self.best_accuracy:
             self.save_model(file_path, num_to_keep)
             self.best_accuracy = accuracy
