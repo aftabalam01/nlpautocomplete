@@ -36,6 +36,7 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
         with open(data_file, 'rb') as data_pkl:
             dataset = pickle.load(data_pkl)
         data = dataset['tokens']
+        print(f'First line is dataset: {data[0]}')
         inputs_list=[]
         targets_list = []
         i=0

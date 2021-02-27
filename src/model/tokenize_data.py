@@ -90,18 +90,18 @@ def prepare_data(data_file, vocab=None,data_type='train',is_sample=False):
     for line in lines:
         data = nlp_text_preprocessing(line) 
         line_token = vocab.sentence_to_array(data).tolist() + [vocab.vocab['voc2ind'][vocab.STOP]]
-        line_tokens = [*line_tokens,line_token]
+        line_tokens.extend([line_token])
 
     pickle.dump({'tokens': line_tokens}, open(f'{data_file}.pkl', 'wb'))
 
 def tokenize_prepare_data():
     print("Creating vocab using train data")
-    vocab = Vocabulary()
+    vocab = Vocabulary(f'{DATA_PATH}/masterdata/master_train.txt')
     print(vocab.get()['voc2ind'],len(vocab) )
     print("Coverting train sentences to tokens")
     prepare_data(data_file=f'{DATA_PATH}/masterdata/master_train.txt')
     print("Coverting test sentences to tokens")
-    prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/masterdata/master_test.txt')
+    #prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/masterdata/master_test.txt')
     print("Coverting validation sentences to tokens")
     prepare_data(vocab=vocab,data_file=f'{DATA_PATH}/masterdata/master_dev.txt')
 
