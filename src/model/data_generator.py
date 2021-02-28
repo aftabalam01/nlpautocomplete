@@ -11,7 +11,7 @@ from model.tokenize_data import Vocabulary
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')
 
-def ngram(n, tokens):
+def ngram(n, tokens,skip_char,startindex):
     """
     input list of tokens
     n - ngram 
@@ -20,12 +20,15 @@ def ngram(n, tokens):
     """
     N = len(tokens)
     ngrams = []
-    for t in range(N-n+1):
-        ngrams = [*ngrams,tokens[t:t+n]]
+    for t in range(startindex,N-skip_char+1,skip_char):
+        token = tokens[t:t+n]
+        if len(token)<n:
+          token.extend([0]*(n-len(token)))# do padding
+        ngrams = [*ngrams,token]
     return ngrams
 
 class AutoCompleteDataset(torch.utils.data.Dataset):
-    def __init__(self, data_file, sequence_length, batch_size):
+    def __init__(self, data_file, sequence_length, batch_size,skip_char=4):
         super(AutoCompleteDataset, self).__init__()
         self.vocab = Vocabulary().get()
         self.sequence_length = sequence_length
@@ -45,17 +48,14 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
             i +=1
             if i%10000==0:
               print(f'{i} sentences are processes')
-            # pad_len = self.sequence_length - len(line) % self.sequence_length
-            # line = [0]*pad_len+ line # 0 padding
-            # create ngram tokens and add it to 
-            #print(line,self.sequence_length)
-            ngram_tokens = ngram(n=self.sequence_length,tokens=line)
-            #print(ngram_tokens)
-            inputs_list.extend(ngram_tokens[:-1])
-            targets_list.extend(ngram_tokens[1:])
-        len_tokens = int((len(inputs_list)//self.batch_size) * self.batch_size)
+            inputs_list.extend(ngram(n=self.sequence_length,tokens=line,skip_char=skip_char,startindex=0))
+            targets_list.extend(ngram(n=self.sequence_length,tokens=line,skip_char=skip_char,startindex=1))
+
+        len_tokens = int((len(targets_list)//self.batch_size) * self.batch_size)
         self.datas = inputs_list[0:len_tokens]
         self.labels = targets_list[0:len_tokens]
+        print(f"Input length: {len(self.datas)} ")
+        print(f"Input length: {len(self.labels)} ")
 
     def array_to_sentence(self, arr):
         return ''.join([self.vocab['ind2voc'][int(ind)] for ind in arr])
