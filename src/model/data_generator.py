@@ -22,8 +22,6 @@ def ngram(n, tokens,skip_char,startindex):
     ngrams = []
     for t in range(startindex,N-skip_char+1,skip_char):
         token = tokens[t:t+n]
-        if len(token)<n:
-          token.extend([0]*(n-len(token)))# do padding
         ngrams = [*ngrams,token]
     return ngrams
 
@@ -77,6 +75,23 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
             print(self.labels[idx])
             raise
         return data, label
+
+    def collate_fn(self, batch):
+        def tensorize(elements, dtype):
+            return [torch.tensor(element, dtype=dtype) for element in elements]
+
+        def pad(tensors):
+            """Assumes 1-d tensors."""
+            padded_tensors = [
+                F.pad(tensor, (0, self.sequence_length - len(tensor)), value=0) for tensor in tensors
+            ]
+            return padded_tensors
+
+        inputs, targets = zip(*batch)
+        return [
+            torch.stack(pad(tensorize(inputs, torch.long)), dim=0),
+            torch.stack(tensorize(targets, torch.long), dim=0),
+        ]
 
     def vocab_size(self):
         return len(self.vocab['voc2ind'])

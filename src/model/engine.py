@@ -184,9 +184,9 @@ def train_eval(work_dir='./logs'):
             'pin_memory': True} if use_cuda else {}
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=BATCH_SIZE,
-                                            shuffle=False, **kwargs)
+                                            shuffle=True,collate_fn=data_train.collate_fn, **kwargs)
     eval_loader = torch.utils.data.DataLoader(data_eval, batch_size=EVAL_BATCH_SIZE,
-                                            shuffle=False, **kwargs)
+                                            shuffle=False,collate_fn=data_eval.collate_fn, **kwargs)
 
     automodel = AutoCompleteNet(data_train.vocab_size(), FEATURE_SIZE).to(device)
 
