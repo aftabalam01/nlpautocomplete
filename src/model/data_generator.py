@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import random
 from nltk.util import pad_sequence
+import torch.nn.functional as F
 #from nltk.util import bigrams
 #from nltk.util import ngrams
 from pathlib import Path
@@ -20,13 +21,13 @@ def ngram(n, tokens,skip_char,startindex):
     """
     N = len(tokens)
     ngrams = []
-    for t in range(startindex,N-skip_char+1,skip_char):
+    for t in range(startindex,N-skip_char+1,max(1,skip_char)):
         token = tokens[t:t+n]
         ngrams = [*ngrams,token]
     return ngrams
 
 class AutoCompleteDataset(torch.utils.data.Dataset):
-    def __init__(self, data_file, sequence_length, batch_size,skip_char=4):
+    def __init__(self, data_file, sequence_length, batch_size,skip_char=1):
         super(AutoCompleteDataset, self).__init__()
         self.vocab = Vocabulary().get()
         self.sequence_length = sequence_length
@@ -78,7 +79,7 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
 
     def collate_fn(self, batch):
         def tensorize(elements, dtype):
-            return [torch.tensor(element, dtype=dtype) for element in elements]
+            return [element.detach().clone() for element in elements]
 
         def pad(tensors):
             """Assumes 1-d tensors."""
@@ -90,7 +91,7 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
         inputs, targets = zip(*batch)
         return [
             torch.stack(pad(tensorize(inputs, torch.long)), dim=0),
-            torch.stack(tensorize(targets, torch.long), dim=0),
+            torch.stack(pad(tensorize(targets, torch.long)), dim=0),
         ]
 
     def vocab_size(self):
