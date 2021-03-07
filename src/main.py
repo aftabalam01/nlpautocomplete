@@ -4,6 +4,7 @@ import string
 import random
 import torch
 import pickle
+import numpy as np
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from model import gru_model, data_generator, engine, tokenize_data
@@ -41,7 +42,8 @@ class MyModel_Runner:
     def write_pred(cls, preds, fname):
         with open(fname, 'wt') as f:
             for p in preds:
-                f.write('{}\n'.format(p))
+                f.write(p.strip())
+                f.write('\n')
 
     def run_train(self, data, work_dir):
         # your code here
@@ -61,15 +63,16 @@ class MyModel_Runner:
         # your code here
         preds = []
         count=0
+        n = len(data)
+        data = np.array(data).reshape(n,1)
+        print(data.shape)
         if not self.vocab:
             with open(f'{work_dir}/vocabulary.pkl','rb') as f:
                     self.vocab = pickle.load(f)
-        for inp in data:
-            if count % 1000 == 0:
-                print(f'{count} prediction completed')
-            count += 1
-            # this model just predicts a random character each time
-            preds.append(''.join(engine.predict_next_characters(model, device, inp[-100:], vocab=self.vocab, num_chars=3)))
+        def predict(row):
+            #print(row[0])
+            return ''.join(engine.predict_next_characters(model, device, row[0][-100:], vocab=self.vocab, num_chars=3))
+        preds = np.apply_along_axis(predict,1,data)
         return preds
 
     def save(self, work_dir):

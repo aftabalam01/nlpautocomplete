@@ -3,16 +3,12 @@ import torch
 import pickle
 import numpy as np
 import random
-from nltk.util import pad_sequence
-import torch.nn.functional as F
-#from nltk.util import bigrams
-#from nltk.util import ngrams
 from pathlib import Path
 from model.tokenize_data import Vocabulary
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')
 
-def ngram(n, tokens,skip_char,startindex):
+def ngram(n, tokens):
     """
     input list of tokens
     n - ngram 
@@ -21,13 +17,12 @@ def ngram(n, tokens,skip_char,startindex):
     """
     N = len(tokens)
     ngrams = []
-    for t in range(startindex,N-skip_char+1,max(1,skip_char)):
-        token = tokens[t:t+n]
-        ngrams = [*ngrams,token]
+    for t in range(N-n+1):
+        ngrams = [*ngrams,tokens[t:t+n]]
     return ngrams
 
 class AutoCompleteDataset(torch.utils.data.Dataset):
-    def __init__(self, data_file, sequence_length, batch_size,skip_char=1):
+    def __init__(self, data_file, sequence_length, batch_size):
         super(AutoCompleteDataset, self).__init__()
         self.vocab = Vocabulary().get()
         self.sequence_length = sequence_length
@@ -38,7 +33,6 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
         with open(data_file, 'rb') as data_pkl:
             dataset = pickle.load(data_pkl)
         data = dataset['tokens']
-        print(f'First line is dataset: {data[0]}')
         inputs_list=[]
         targets_list = []
         i=0
@@ -47,14 +41,13 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
             i +=1
             if i%10000==0:
               print(f'{i} sentences are processes')
-            inputs_list.extend(ngram(n=self.sequence_length,tokens=line,skip_char=skip_char,startindex=0))
-            targets_list.extend(ngram(n=self.sequence_length,tokens=line,skip_char=skip_char,startindex=1))
-
-        len_tokens = int((len(targets_list)//self.batch_size) * self.batch_size)
+            ngram_tokens = ngram(n=self.sequence_length,tokens=line)
+       
+            inputs_list.extend(ngram_tokens[:-1])
+            targets_list.extend(ngram_tokens[1:])
+        len_tokens = int((len(inputs_list)//self.batch_size) * self.batch_size)
         self.datas = inputs_list[0:len_tokens]
         self.labels = targets_list[0:len_tokens]
-        print(f"Input length: {len(self.datas)} ")
-        print(f"Input length: {len(self.labels)} ")
 
     def array_to_sentence(self, arr):
         return ''.join([self.vocab['ind2voc'][int(ind)] for ind in arr])
@@ -77,26 +70,8 @@ class AutoCompleteDataset(torch.utils.data.Dataset):
             raise
         return data, label
 
-    def collate_fn(self, batch):
-        def tensorize(elements, dtype):
-            return [element.detach().clone() for element in elements]
-
-        def pad(tensors):
-            """Assumes 1-d tensors."""
-            padded_tensors = [
-                F.pad(tensor, (0, self.sequence_length - len(tensor)), value=0) for tensor in tensors
-            ]
-            return padded_tensors
-
-        inputs, targets = zip(*batch)
-        return [
-            torch.stack(pad(tensorize(inputs, torch.long)), dim=0),
-            torch.stack(pad(tensorize(targets, torch.long)), dim=0),
-        ]
-
     def vocab_size(self):
         return len(self.vocab['voc2ind'])
-
 if __name__=='__main__':
     BATCH_SIZE =  5
     SEQUENCE_LENGTH = 10
