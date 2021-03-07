@@ -7,7 +7,7 @@ import pickle
 import numpy as np
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from model import gru_model, data_generator, engine, tokenize_data
+from model import lstm_model, data_generator, engine, tokenize_data
 from datetime import datetime
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

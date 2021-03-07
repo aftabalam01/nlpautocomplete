@@ -10,7 +10,7 @@ import random
 import pickle
 from model import torch_utils
 from model.data_generator import AutoCompleteDataset
-from model.gru_model import AutoCompleteNet
+from model.lstm_model import AutoCompleteNet
 
 
 DATA_PATH = os.path.join(Path(__file__).parent, '..', 'data')
@@ -41,9 +41,10 @@ def predict_next_characters(automodel, device, seed_words, vocab=None, num_chars
         # Computes the initial hidden state from the prompt (seed words).
         hidden = None
         output=None
+        cell_state=None
         for ind in arr:
             data = ind.to(device)
-            output, hidden = automodel.inference(data, hidden)
+            output, hidden,cell_state = automodel.inference(data, hidden,cell_state)
         # get top n probs indexes
         # get top 3 values's indices
         ind_arr = torch.topk(output,num_chars)[1].tolist()
@@ -56,14 +57,17 @@ def train_one_epoch(automodel, device, optimizer, train_loader, lr, epoch, log_i
     losses = []
     pp_H = []
     hidden = None
+    cell_state = None
     for batch_idx, (data, label) in enumerate(tqdm.tqdm(train_loader,miniters=10)):
         data, label = data.to(device), label.to(device)
         # Separates the hidden state across batches. 
         # Otherwise the backward would try to go all the way to the beginning every time.
         if hidden is not None:
             hidden = repackage_hidden(hidden)
+        if cell_state is not None:
+            cell_state = repackage_hidden(cell_state)
         optimizer.zero_grad()
-        output, hidden = automodel(data)
+        output, hidden,cell_state = automodel(data,hidden,cell_state)
         pred = output.max(-1)[1]
         loss = automodel.loss(output, label)
         losses.append(loss.item())
@@ -84,10 +88,11 @@ def eval(automodel, device, eval_loader,log_interval):
     iter = enumerate(eval_loader)
     with torch.no_grad():
         hidden = None
+        cell_state = None
         for batch_idx,(data , label) in enumerate(eval_loader):
             data, label = data.to(device), label.to(device)
             try:
-                output, hidden = automodel(data, hidden)
+                output, hidden,cell_state = automodel(data, hidden,cell_state)
                 eval_loss += automodel.loss(output, label, reduction='mean').item()
                 pred = output.max(-1)[1]
                 correct_mask = pred.eq(label.view_as(pred))
@@ -125,10 +130,11 @@ def test(automodel,device):
     iter = enumerate(eval_loader)
     with torch.no_grad():
         hidden = None
+        cell_state = None
         for batch_idx,(data , label) in enumerate(eval_loader):
             data, label = data.to(device), label.to(device)
             try:
-                output, hidden = automodel(data, hidden)
+                output, hidden,cell_state = automodel(data, hidden,cell_state)
                 eval_loss += automodel.loss(output, label, reduction='mean').item()
                 pred = output.max(-1)[1]
                 correct_mask = pred.eq(label.view_as(pred))
@@ -184,9 +190,9 @@ def train_eval(work_dir='./logs'):
             'pin_memory': True} if use_cuda else {}
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=BATCH_SIZE,
-                                            shuffle=True,collate_fn=data_train.collate_fn, **kwargs)
+                                            shuffle=False, **kwargs)
     eval_loader = torch.utils.data.DataLoader(data_eval, batch_size=EVAL_BATCH_SIZE,
-                                            shuffle=False,collate_fn=data_eval.collate_fn, **kwargs)
+                                            shuffle=False, **kwargs)
 
     automodel = AutoCompleteNet(data_train.vocab_size(), FEATURE_SIZE).to(device)
 
@@ -214,7 +220,7 @@ def train_eval(work_dir='./logs'):
             train_perplexities.append((epoch, train_perplexity))
             torch_utils.write_log(LOG_PATH, (train_losses, eval_losses, eval_accuracies, eval_perplexities, train_perplexities))
             automodel.save_best_model(test_accuracy, checkpoints + '/%03d.pt.checkpoint' % epoch)
-            seed_words = 'Do you know '
+            seed_words = 'Do you know nlp'
     
             for ii in range(10):
                 next_chars = predict_next_characters(automodel, device, seed_words, vocab, num_chars=3)
