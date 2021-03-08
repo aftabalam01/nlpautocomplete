@@ -63,7 +63,7 @@ def train_one_epoch(automodel, device, optimizer, train_loader, lr, epoch, log_i
         if hidden is not None:
             hidden = repackage_hidden(hidden)
         optimizer.zero_grad()
-        output, hidden = automodel(data)
+        output, hidden = automodel(data, hidden)
         pred = output.max(-1)[1]
         loss = automodel.loss(output, label)
         losses.append(loss.item())
@@ -184,9 +184,9 @@ def train_eval(work_dir='./logs'):
             'pin_memory': True} if use_cuda else {}
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=BATCH_SIZE,
-                                            shuffle=True,collate_fn=data_train.collate_fn, **kwargs)
+                                            shuffle=True, **kwargs)
     eval_loader = torch.utils.data.DataLoader(data_eval, batch_size=EVAL_BATCH_SIZE,
-                                            shuffle=False,collate_fn=data_eval.collate_fn, **kwargs)
+                                            shuffle=False, **kwargs)
 
     automodel = AutoCompleteNet(data_train.vocab_size(), FEATURE_SIZE).to(device)
 
