@@ -54,7 +54,7 @@ class MyModel_Runner:
             with open(f'{work_dir}/vocabulary.pkl','rb') as f:
                 self.vocab = pickle.load(f)
         print(self.vocab)
-        automodel = gru_model.AutoCompleteNet(len(self.vocab['voc2ind']), FEATURE_SIZE)
+        automodel = lstm_model.AutoCompleteNet(len(self.vocab['voc2ind']), FEATURE_SIZE)
         automodel.load_model(f'{work_dir}/model.checkpoint',device)
         automodel.to(device)
         engine.test(automodel,device)
@@ -89,7 +89,7 @@ class MyModel_Runner:
             with open(f'{work_dir}/vocabulary.pkl','rb') as f:
                 cls.vocab = pickle.load(f)
             print(f"Size of vocab is {len(cls.vocab['voc2ind'])}")
-            automodel = gru_model.AutoCompleteNet(len(cls.vocab['voc2ind']), FEATURE_SIZE)
+            automodel = lstm_model.AutoCompleteNet(len(cls.vocab['voc2ind']), FEATURE_SIZE)
             automodel.load_model(f'{work_dir}/model.checkpoint',device)
             automodel.to(device)
     
