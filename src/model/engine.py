@@ -67,7 +67,8 @@ def train_one_epoch(automodel, device, optimizer, train_loader, lr, epoch, log_i
         if cell_state is not None:
             cell_state = repackage_hidden(cell_state)
         optimizer.zero_grad()
-        output, hidden,cell_state = automodel(data,hidden,cell_state)
+        #output, hidden,cell_state = automodel(data,hidden,cell_state)
+        output, hidden,cell_state = automodel(data)
         pred = output.max(-1)[1]
         loss = automodel.loss(output, label)
         losses.append(loss.item())
@@ -163,7 +164,7 @@ def train_eval(work_dir='./logs'):
     FEATURE_SIZE = 256
     EVAL_BATCH_SIZE = 256
     EPOCHS = 100
-    LEARNING_RATE = 0.00001
+    LEARNING_RATE = 0.001
     WEIGHT_DECAY = 0.000005
     USE_CUDA = True
     PRINT_INTERVAL = 10000
@@ -209,7 +210,7 @@ def train_eval(work_dir='./logs'):
     try:
         for epoch in range(start_epoch, EPOCHS + 1):
             if epoch % 10 == 0 :
-                LEARNING_RATE = LEARNING_RATE *.8
+                LEARNING_RATE = LEARNING_RATE *.5
             optimizer = optim.Adam(automodel.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
             train_loss, train_perplexity = train_one_epoch(automodel, device, optimizer, train_loader, LEARNING_RATE, epoch, PRINT_INTERVAL)
             test_loss, test_accuracy, test_perplexity = eval(automodel, device, eval_loader,PRINT_INTERVAL)
