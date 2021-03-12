@@ -30,7 +30,7 @@ class MyModel_Runner:
         try:
             with open(fname) as f:
                 for line in f:
-                    inp = line[:-1]  # the last character is a newline
+                    inp = line.strip('\r\n')  # the last character is a newline
                     data.append(inp)
             return data
         except FileNotFoundError:
