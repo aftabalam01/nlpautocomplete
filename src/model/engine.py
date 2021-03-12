@@ -63,7 +63,7 @@ def train_one_epoch(automodel, device, optimizer, train_loader, lr, epoch, log_i
         if hidden is not None:
             hidden = repackage_hidden(hidden)
         optimizer.zero_grad()
-        output, hidden = automodel(data, hidden)
+        output, hidden = automodel(data)
         pred = output.max(-1)[1]
         loss = automodel.loss(output, label)
         losses.append(loss.item())
@@ -157,7 +157,7 @@ def train_eval(work_dir='./logs'):
     FEATURE_SIZE = 256
     EVAL_BATCH_SIZE = 256
     EPOCHS = 100
-    LEARNING_RATE = 0.00001
+    LEARNING_RATE = 0.001
     WEIGHT_DECAY = 0.000005
     USE_CUDA = True
     PRINT_INTERVAL = 10000

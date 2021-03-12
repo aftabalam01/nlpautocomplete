@@ -88,7 +88,12 @@ def prepare_data(data_file, vocab=None,data_type='train',is_sample=False):
         lines = lines[:1000]
     line_tokens=[]
     for line in lines:
-        data = nlp_text_preprocessing(line) 
+        start = 0
+        end = len(line)
+        if len(line)>200:
+          start = np.random.randint(0,100,1)[0]
+          end = np.random.randint(200,350,1)[0]
+        data = nlp_text_preprocessing(line[start:end])
         line_token = vocab.sentence_to_array(data).tolist() + [vocab.vocab['voc2ind'][vocab.STOP]]
         line_tokens.extend([line_token])
 
