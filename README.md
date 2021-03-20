@@ -1,3 +1,4 @@
+This is an experiment with using a GRU classifier, and its in progress.
 # Character-level Autocomplete
 
 This repo contains a character-based language model to predict next 3 best characters that can be surfaced in an autocomplete interface.
